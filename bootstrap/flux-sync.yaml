@@ -1,4 +1,5 @@
-# Points Flux at this repo. bootstrap.sh substitutes ${GIT_URL} and ${GIT_BRANCH}.
+# Points Flux at this repo. bootstrap.sh substitutes ${GIT_URL}, ${GIT_BRANCH} and
+# ${CLUSTER} (k3d or kubernetes: which clusters/<dir> this cluster syncs).
 # For a private repo add `secretRef: {name: oc-gitops-auth}` and create that
 # secret with `flux create secret git oc-gitops-auth ...`.
 apiVersion: source.toolkit.fluxcd.io/v1
@@ -19,7 +20,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./clusters/k3d
+  path: ./clusters/${CLUSTER}
   prune: true
   sourceRef:
     kind: GitRepository

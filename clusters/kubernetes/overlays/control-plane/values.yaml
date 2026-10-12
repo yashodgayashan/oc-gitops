@@ -1,0 +1,54 @@
+# Control plane values for a non-k3d cluster, following the upstream
+# "On Your Environment" guide. Domain variables come from cluster-settings.yaml.
+
+openchoreoApi:
+  config:
+    server:
+      publicUrl: "https://api.${CP_BASE_DOMAIN}"
+    security:
+      authentication:
+        jwt:
+          jwks:
+            # Thunder is served with the self-signed openchoreo-ca certificate.
+            # Remove once overlays/tls uses a trusted issuer.
+            skip_tls_verify: true
+  http:
+    hostnames:
+    - "api.${CP_BASE_DOMAIN}"
+
+backstage:
+  secretName: backstage-secrets
+  baseUrl: "https://console.${CP_BASE_DOMAIN}"
+  http:
+    hostnames:
+    - "console.${CP_BASE_DOMAIN}"
+  auth:
+    redirectUrls:
+    - "https://console.${CP_BASE_DOMAIN}/api/auth/openchoreo-auth/handler/frame"
+  extraEnv:
+  # Lets Backstage call Thunder through the self-signed gateway. Remove with a trusted issuer.
+  - name: NODE_TLS_REJECT_UNAUTHORIZED
+    value: "0"
+
+portalAssistant:
+  config:
+    # Server-side call, so use the in-cluster observer service.
+    observerApiUrl: "http://observer.openchoreo-observability-plane.svc.cluster.local:8080"
+
+security:
+  oidc:
+    issuer: "https://thunder.${CP_BASE_DOMAIN}"
+    jwksUrl: "https://thunder.${CP_BASE_DOMAIN}/oauth2/jwks"
+    authorizationUrl: "https://thunder.${CP_BASE_DOMAIN}/oauth2/authorize"
+    tokenUrl: "https://thunder.${CP_BASE_DOMAIN}/oauth2/token"
+
+gateway:
+  tls:
+    enabled: true
+    hostname: "*.${CP_BASE_DOMAIN}"
+    certificateRefs:
+    - name: cp-gateway-tls
+
+features:
+  secretManagement:
+    enabled: true

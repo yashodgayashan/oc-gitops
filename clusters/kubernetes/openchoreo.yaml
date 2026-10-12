@@ -1,0 +1,147 @@
+# OpenChoreo planes, their registrations, and default platform resources.
+# Modules with postBuild get ${...} variables from cluster-settings.yaml. It is
+# deliberately NOT enabled on default-resources, workflow-templates or
+# observability-modules: those contain literal ${...} (CEL, shell, OTel config).
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: control-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cert-manager
+    - name: tls
+    - name: trust-manager
+    - name: kgateway
+    - name: openbao
+    - name: thunder
+  interval: 10m
+  retryInterval: 1m
+  timeout: 20m
+  path: ./clusters/kubernetes/overlays/control-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: default-resources
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  path: ./openchoreo/default-resources
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: data-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 15m
+  path: ./clusters/kubernetes/overlays/data-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: workflow-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 15m
+  path: ./clusters/kubernetes/overlays/workflow-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: workflow-templates
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: workflow-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  path: ./clusters/kubernetes/overlays/workflow-templates
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: observability-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 30m
+  path: ./clusters/kubernetes/overlays/observability-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: observability-modules
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: observability-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 30m
+  path: ./openchoreo/observability-modules
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops

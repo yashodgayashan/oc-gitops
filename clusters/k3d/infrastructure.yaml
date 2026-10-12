@@ -57,7 +57,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 2m
-  path: ./infrastructure/coredns
+  path: ./clusters/k3d/overlays/coredns
   prune: true
   wait: true
   sourceRef:
@@ -171,7 +171,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 10m
-  path: ./infrastructure/thunder
+  path: ./clusters/k3d/overlays/thunder
   prune: true
   wait: true
   sourceRef:

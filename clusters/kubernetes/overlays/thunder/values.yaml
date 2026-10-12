@@ -1,0 +1,627 @@
+# Upstream install/k3d/common/values-thunder.yaml @ v1.3.1 with the hostname/scheme
+# substitutions from the upstream "On Your Environment" guide. The domain variables are
+# filled in by Flux from cluster-settings.yaml. Bootstrap users/groups/OAuth apps
+# are only applied on first install; to change them later, reinstall Thunder.
+# The MCP resource-server identifiers are also rewritten to the public API/observer
+# URLs (they must match what each plane advertises).
+# Shared ThunderID helm values for k3d dev setups.
+# Only overrides that differ from ThunderID chart defaults.
+
+fullnameOverride: thunder
+
+httproute:
+  enabled: true
+  parentRefs:
+    - name: gateway-default
+      namespace: openchoreo-control-plane
+  hostnames:
+    - thunder.${CP_BASE_DOMAIN}
+
+# Not using nginx ingress in openchoreo
+ingress:
+  enabled: false
+
+# SQLite requires a single writer pod
+deployment:
+  replicaCount: 1
+
+hpa:
+  enabled: false
+
+configuration:
+  server:
+    httpOnly: true
+    publicUrl: "https://thunder.${CP_BASE_DOMAIN}"
+
+  gateClient:
+    hostname: "thunder.${CP_BASE_DOMAIN}"
+    port: 443
+    scheme: "https"
+
+  database:
+    config:
+      type: sqlite
+    runtime_transient:
+      type: sqlite
+    entity:
+      type: sqlite
+    runtime_persistent:
+      type: sqlite
+
+  passkey:
+    allowedOrigins:
+      - "https://console.${CP_BASE_DOMAIN}"
+
+setup:
+  enabled: true
+
+# Declarative resource definitions applied by the setup job's in-process
+# bootstrap on top of the chart's shipped defaults (01-default-resources.yaml).
+# Documents are upserted by id, so every resource carries a fixed id; ids use
+# the 01900000-0000-7000-8001-* block to stay clear of the ThunderID defaults.
+bootstrap:
+  scripts:
+    # Allows the app logoUrls below, which the deny-first img-src baseline blocks.
+    # raw.githubusercontent.com is needed because the CDN 301s there.
+    #
+    # A path override replaces ThunderID's shipped entry instead of merging, so
+    # every directive except img-src mirrors the 1.0.1 defaults and must be
+    # re-synced against `GET /server-config/csp` on a chart upgrade.
+    48-csp.yaml: |
+      resource_type: server_config
+      name: csp
+      value:
+        paths:
+          - location: "/gate/"
+            directives:
+              img-src:
+                - "'self'"
+                - "data:"
+                - "https://cdn.statically.io"
+                - "https://raw.githubusercontent.com"
+              font-src:
+                - "'self'"
+                - "data:"
+              style-src-attr:
+                - "'self'"
+                - "'unsafe-inline'"
+              style-src-elem:
+                - "'self'"
+          - location: "/console/"
+            directives:
+              img-src:
+                - "'self'"
+                - "data:"
+                - "https://cdn.statically.io"
+                - "https://raw.githubusercontent.com"
+              font-src:
+                - "'self'"
+                - "data:"
+              connect-src:
+                - "'self'"
+                - "https://thunderid.dev"
+              style-src-attr:
+                - "'self'"
+                - "'unsafe-inline'"
+              style-src-elem:
+                - "'self'"
+                - "'unsafe-inline'"
+              worker-src:
+                - "'self'"
+                - "blob:"
+
+    49-cors.yaml: |
+      resource_type: server_config
+      name: cors
+      value:
+        allowedOrigins:
+          - "https://console.${CP_BASE_DOMAIN}"
+          - "http://localhost:7007"
+
+    50-user-schema-and-users.yaml: |
+      resource_type: user_type
+      id: 01900000-0000-7000-8001-000000000010
+      category: user
+      name: openchoreo-user
+      ouHandle: default
+      allowSelfRegistration: true
+      systemAttributes:
+        display: username
+      schema:
+        username:
+          type: string
+          displayName: Username
+          required: true
+          unique: true
+        password:
+          type: string
+          displayName: Password
+          required: false
+          credential: true
+        given_name:
+          type: string
+          displayName: First Name
+          required: true
+        family_name:
+          type: string
+          displayName: Last Name
+          required: true
+        email:
+          type: string
+          displayName: Email
+          required: true
+          unique: true
+      ---
+      resource_type: user
+      id: 01900000-0000-7000-8001-000000000030
+      type: openchoreo-user
+      ouHandle: default
+      attributes:
+        username: admin@openchoreo.dev
+        email: admin@openchoreo.dev
+        given_name: Admin
+        family_name: User
+      credentials:
+        password: "Admin@123"
+      ---
+      resource_type: user
+      id: 01900000-0000-7000-8001-000000000031
+      type: openchoreo-user
+      ouHandle: default
+      attributes:
+        username: developer@openchoreo.dev
+        email: developer@openchoreo.dev
+        given_name: Developer
+        family_name: User
+      credentials:
+        password: "Dev@123"
+      ---
+      resource_type: user
+      id: 01900000-0000-7000-8001-000000000032
+      type: openchoreo-user
+      ouHandle: default
+      attributes:
+        username: platform-engineer@openchoreo.dev
+        email: platform-engineer@openchoreo.dev
+        given_name: Platform
+        family_name: Engineer
+      credentials:
+        password: "PE@123"
+      ---
+      resource_type: user
+      id: 01900000-0000-7000-8001-000000000033
+      type: openchoreo-user
+      ouHandle: default
+      attributes:
+        username: sre@openchoreo.dev
+        email: sre@openchoreo.dev
+        given_name: SRE
+        family_name: User
+      credentials:
+        password: "SRE@123"
+      ---
+      resource_type: group
+      id: 01900000-0000-7000-8001-000000000040
+      name: admins
+      description: Openchoreo Admins group
+      ouHandle: default
+      members:
+        - id: 01900000-0000-7000-8001-000000000030
+          type: user
+      ---
+      resource_type: group
+      id: 01900000-0000-7000-8001-000000000041
+      name: developers
+      description: Openchoreo Developers group
+      ouHandle: default
+      members:
+        - id: 01900000-0000-7000-8001-000000000031
+          type: user
+      ---
+      resource_type: group
+      id: 01900000-0000-7000-8001-000000000042
+      name: platform-engineers
+      description: Openchoreo Platform Engineers group
+      ouHandle: default
+      members:
+        - id: 01900000-0000-7000-8001-000000000032
+          type: user
+      ---
+      resource_type: group
+      id: 01900000-0000-7000-8001-000000000043
+      name: sres
+      description: Openchoreo SREs group
+      ouHandle: default
+      members:
+        - id: 01900000-0000-7000-8001-000000000033
+          type: user
+
+    51-backstage-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000060
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: Backstage
+      type: fullstack
+      authFlowId: 01900000-0000-7000-8000-000000000061
+      description: OpenChoreo Backstage Portal
+      logoUrl: "https://cdn.statically.io/gh/openchoreo/openchoreo.github.io@main/static/img/openchoreo-logo.png"
+      allowedUserTypes:
+        - openchoreo-user
+      assertion:
+        validityPeriod: 3600
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: openchoreo-backstage-client
+            clientSecret: backstage-portal-secret
+            redirectUris:
+              - "https://console.${CP_BASE_DOMAIN}/api/auth/openchoreo-auth/handler/frame"
+            grantTypes:
+              - authorization_code
+              - client_credentials
+              - refresh_token
+            responseTypes:
+              - code
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                userConfig:
+                  validityPeriod: 86400
+                  attributes:
+                    - given_name
+                    - family_name
+                    - username
+                    - groups
+                clientConfig:
+                  validityPeriod: 86400
+              idToken:
+                validityPeriod: 86400
+                userAttributes:
+                  - given_name
+                  - family_name
+                  - username
+                  - groups
+            scopeClaims:
+              email:
+                - email
+              groups:
+                - groups
+              profile:
+                - username
+                - given_name
+                - family_name
+                - picture
+
+    52-default-apps.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000061
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: Customer Portal
+      type: m2m
+      description: Customer Portal Application
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: customer-portal-client
+            clientSecret: supersecret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 3600
+
+    53-rca-agent-client.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000062
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: RCA Agent
+      type: m2m
+      description: OpenChoreo RCA Agent Client
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: openchoreo-rca-agent
+            clientSecret: openchoreo-rca-agent-secret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 3600
+
+    54-cli-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000063
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: OpenChoreo CLI
+      type: custom
+      authFlowId: 01900000-0000-7000-8000-000000000061
+      description: OpenChoreo CLI Default Application
+      logoUrl: "https://cdn.statically.io/gh/openchoreo/openchoreo.github.io@main/static/img/openchoreo-logo.png"
+      allowedUserTypes:
+        - openchoreo-user
+      assertion:
+        validityPeriod: 3600
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: openchoreo-cli
+            redirectUris:
+              - "http://127.0.0.1:55152/auth-callback"
+            grantTypes:
+              - authorization_code
+              - refresh_token
+            responseTypes:
+              - code
+            tokenEndpointAuthMethod: none
+            pkceRequired: true
+            publicClient: true
+            token:
+              accessToken:
+                userConfig:
+                  validityPeriod: 3600
+                  attributes:
+                    - given_name
+                    - family_name
+                    - username
+                    - groups
+              idToken:
+                validityPeriod: 3600
+                userAttributes:
+                  - given_name
+                  - family_name
+                  - username
+                  - groups
+            scopeClaims:
+              email:
+                - email
+              groups:
+                - groups
+              profile:
+                - username
+                - given_name
+                - family_name
+                - picture
+                - groups
+
+    # install/quick-start/occ-login.sh calls the ThunderID management API with a
+    # client_credentials token for this app, so it is granted the `system`
+    # permission. The System resource server identifier is set to
+    # <server.publicUrl>/mcp so it matches the token request's `resource` and
+    # the Console's derived resource identifier. {{ .PUBLIC_URL }} is resolved
+    # by the bootstrap from the server's public URL.
+    55-system-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000064
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: System Application
+      type: m2m
+      description: Generic system application for automation and integrations
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: openchoreo-system-app
+            clientSecret: openchoreo-system-app-secret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 3600
+      ---
+      resource_type: resource_server
+      id: 01900000-0000-7000-8000-000000000020
+      name: System
+      description: System resource server
+      identifier: "{{ .PUBLIC_URL }}/mcp"
+      ouHandle: default
+      resources:
+        - name: System
+          handle: system
+          description: System resource
+      ---
+      resource_type: role
+      id: 01900000-0000-7000-8001-000000000050
+      name: OpenChoreo System Automation
+      description: Grants the OpenChoreo system application access to the ThunderID management API
+      ouHandle: default
+      permissions:
+        - resourceServerId: 01900000-0000-7000-8000-000000000020
+          permissions:
+            - system
+      assignments:
+        - id: 01900000-0000-7000-8001-000000000064
+          type: app
+
+    56-user-mcp-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000065
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: User MCP App
+      type: mcp
+      authFlowId: 01900000-0000-7000-8000-000000000061
+      description: User MCP app to be used by terminals and user facing AI agents
+      allowedUserTypes:
+        - openchoreo-user
+      assertion:
+        validityPeriod: 3600
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: user_mcp_client
+            redirectUris:
+              - "http://localhost:8075/callback"
+              - "cursor://anysphere.cursor-mcp/oauth/callback"
+              - "http://127.0.0.1:19876/mcp/oauth/callback"
+            grantTypes:
+              - authorization_code
+              - refresh_token
+            responseTypes:
+              - code
+            tokenEndpointAuthMethod: none
+            pkceRequired: true
+            publicClient: true
+            token:
+              accessToken:
+                userConfig:
+                  validityPeriod: 86400
+                  attributes:
+                    - given_name
+                    - family_name
+                    - username
+                    - groups
+              idToken:
+                validityPeriod: 86400
+                userAttributes:
+                  - given_name
+                  - family_name
+                  - username
+                  - groups
+            scopeClaims:
+              groups:
+                - groups
+              profile:
+                - username
+                - given_name
+                - family_name
+                - picture
+
+    57-service-mcp-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000066
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: Service MCP App
+      type: mcp
+      description: Service MCP app to be used by backend services which can securely store the secret
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: service_mcp_client
+            clientSecret: service_mcp_client_secret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_basic
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 86400
+
+    58-workload-publisher-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000067
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: Workload Publisher
+      type: m2m
+      description: OpenChoreo Workload Publisher Client for creating workloads from CI workflows
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: openchoreo-workload-publisher-client
+            clientSecret: openchoreo-workload-publisher-secret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 3600
+
+    59-openchoreo-observer-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000068
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: OpenChoreo Observer Resource Reader
+      type: m2m
+      description: OpenChoreo Observer Resource Reader Client
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: openchoreo-observer-resource-reader-client
+            clientSecret: openchoreo-observer-resource-reader-client-secret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 3600
+
+    60-finops-agent-client.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-000000000069
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: FinOps Agent
+      type: m2m
+      description: OpenChoreo FinOps Agent Client
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: openchoreo-finops-agent
+            clientSecret: openchoreo-finops-agent-secret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 3600
+
+    61-mcp-e2e-subject-app.yaml: |
+      resource_type: application
+      id: 01900000-0000-7000-8001-00000000006a
+      ouId: 01900000-0000-7000-8000-000000000001
+      name: MCP E2E Subject
+      type: m2m
+      description: Permission-less client_credentials subject for MCP e2e authorization tests. Intentionally has NO ClusterAuthzRoleBinding.
+      inboundAuthConfig:
+        - type: oauth2
+          config:
+            clientId: mcp-e2e-subject-client
+            clientSecret: mcp-e2e-subject-secret
+            grantTypes:
+              - client_credentials
+            tokenEndpointAuthMethod: client_secret_post
+            pkceRequired: false
+            publicClient: false
+            token:
+              accessToken:
+                clientConfig:
+                  validityPeriod: 3600
+
+    # ThunderID answers invalid_target unless a resource server carries the
+    # `resource` an MCP client sends, so each identifier must stay identical to
+    # the plane's advertised `.well-known/oauth-protected-resource` value.
+    62-openchoreo-resource-servers.yaml: |
+      resource_type: resource_server
+      id: 01900000-0000-7000-8001-000000000070
+      name: OpenChoreo Control Plane
+      description: OpenChoreo control plane MCP server
+      identifier: "https://api.${CP_BASE_DOMAIN}/mcp"
+      type: MCP
+      ouHandle: default
+      ---
+      resource_type: resource_server
+      id: 01900000-0000-7000-8001-000000000071
+      name: OpenChoreo Observability Plane
+      description: OpenChoreo observability plane MCP server
+      identifier: "https://observer.${OBS_BASE_DOMAIN}/mcp"
+      type: MCP
+      ouHandle: default

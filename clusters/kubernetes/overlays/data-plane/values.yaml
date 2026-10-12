@@ -1,0 +1,9 @@
+# Data plane values for a non-k3d cluster. Domain variables come from cluster-settings.yaml.
+# If your LoadBalancer gives every gateway the same IP, set gateway.httpPort /
+# httpsPort to free ports here and use the same ports in cluster-data-plane.yaml.
+gateway:
+  tls:
+    enabled: true
+    hostname: "*.${DP_DOMAIN}"
+    certificateRefs:
+    - name: dp-gateway-tls

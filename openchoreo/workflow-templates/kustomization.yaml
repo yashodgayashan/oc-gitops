@@ -1,11 +1,10 @@
-# Argo ClusterWorkflowTemplates from upstream samples/getting-started @ v1.3.1.
+# Argo ClusterWorkflowTemplates from upstream samples/getting-started @ v1.3.1
+# that are the same on every cluster. The publish-image and generate-workload
+# steps differ per cluster (registry, API/IdP URLs) and come from the overlay.
 # Separate module because the ClusterWorkflowTemplate CRD is installed by the
 # workflow-plane HelmRelease, so it must exist before these can be applied.
-# Swap checkout-source / publish-image-k3d for your own git auth or registry.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - checkout-source.yaml
   - build-templates.yaml
-  - publish-image-k3d.yaml
-  - generate-workload-k3d.yaml

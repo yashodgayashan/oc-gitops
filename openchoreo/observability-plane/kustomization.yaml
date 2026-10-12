@@ -3,13 +3,3 @@ kind: Kustomization
 resources:
   - externalsecrets.yaml
   - helmrelease.yaml
-  - cluster-observability-plane.yaml
-configMapGenerator:
-  - name: observability-plane-values
-    namespace: openchoreo-observability-plane
-    files:
-      - values.yaml=values.yaml
-generatorOptions:
-  disableNameSuffixHash: true
-  labels:
-    reconcile.fluxcd.io/watch: Enabled

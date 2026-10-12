@@ -1,0 +1,14 @@
+# Gateway TLS certificate from the openchoreo-ca ClusterIssuer (overlays/tls).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: obs-gateway-tls
+  namespace: openchoreo-observability-plane
+spec:
+  secretName: obs-gateway-tls
+  issuerRef:
+    name: openchoreo-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.${OBS_BASE_DOMAIN}"
+    - "${OBS_BASE_DOMAIN}"

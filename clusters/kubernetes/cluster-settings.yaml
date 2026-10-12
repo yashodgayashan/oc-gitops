@@ -1,0 +1,21 @@
+# The only file you must edit for a new cluster. Flux substitutes these into the
+# thunder, control-plane, data-plane and observability-plane modules (postBuild).
+# Create DNS records pointing each domain (and its wildcard) at the matching
+# gateway LoadBalancer once Flux has created it:
+#   control plane gateway      (openchoreo-control-plane/gateway-default)      -> CP_BASE_DOMAIN
+#   data plane gateway         (openchoreo-data-plane/gateway-default)         -> DP_DOMAIN
+#   observability plane gateway(openchoreo-observability-plane/gateway-default)-> OBS_BASE_DOMAIN
+# No real DNS? Use nip.io, e.g. openchoreo.203-0-113-10.nip.io (needs the LB IPs
+# first: bootstrap, read the IPs, set these, push).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-settings
+  namespace: flux-system
+data:
+  # console.<d>, api.<d>, thunder.<d>
+  CP_BASE_DOMAIN: openchoreo.example.com
+  # *.<d> — hostnames of deployed components
+  DP_DOMAIN: apps.example.com
+  # observer.<d>, rca-agent.<d>, finops-agent.<d>
+  OBS_BASE_DOMAIN: observability.example.com

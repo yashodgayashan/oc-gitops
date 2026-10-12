@@ -3,16 +3,3 @@ kind: Kustomization
 resources:
   - helmrelease.yaml
   - cluster-workflow-plane.yaml
-configMapGenerator:
-  - name: workflow-plane-values
-    namespace: openchoreo-workflow-plane
-    files:
-      - values.yaml
-  - name: registry-values
-    namespace: openchoreo-workflow-plane
-    files:
-      - values.yaml=values-registry.yaml
-generatorOptions:
-  disableNameSuffixHash: true
-  labels:
-    reconcile.fluxcd.io/watch: Enabled

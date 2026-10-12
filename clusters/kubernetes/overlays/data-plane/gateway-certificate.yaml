@@ -1,0 +1,14 @@
+# Gateway TLS certificate from the openchoreo-ca ClusterIssuer (overlays/tls).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dp-gateway-tls
+  namespace: openchoreo-data-plane
+spec:
+  secretName: dp-gateway-tls
+  issuerRef:
+    name: openchoreo-ca
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.${DP_DOMAIN}"
+    - "${DP_DOMAIN}"

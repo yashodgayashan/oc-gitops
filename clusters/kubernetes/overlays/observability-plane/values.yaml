@@ -1,0 +1,49 @@
+# Observability plane values for a non-k3d cluster: the upstream k3d file's
+# settings with public URLs on ${OBS_BASE_DOMAIN} / ${CP_BASE_DOMAIN}, and
+# in-cluster service URLs for server-to-server calls (no self-signed TLS involved).
+
+finOpsAgent:
+  openchoreoApiUrl: "http://openchoreo-api.openchoreo-control-plane.svc.cluster.local:8080"
+  cors:
+    allowedOrigins:
+    - "https://console.${CP_BASE_DOMAIN}"
+  http:
+    hostnames:
+    - "finops-agent.${OBS_BASE_DOMAIN}"
+
+observer:
+  secretName: observer-secret
+  controlPlaneApiUrl: "http://openchoreo-api.openchoreo-control-plane.svc.cluster.local:8080"
+  cors:
+    allowedOrigins:
+    - "https://console.${CP_BASE_DOMAIN}"
+  extraEnvs:
+  - name: OBSERVER_BASE_URL
+    value: "https://observer.${OBS_BASE_DOMAIN}"
+  - name: AUTHZ_TIMEOUT
+    value: "30s"
+  http:
+    hostnames:
+    - "observer.${OBS_BASE_DOMAIN}"
+
+security:
+  oidc:
+    jwksUrl: "http://thunder-service.thunder.svc.cluster.local:8090/oauth2/jwks"
+    tokenUrl: "http://thunder-service.thunder.svc.cluster.local:8090/oauth2/token"
+    authServerBaseUrl: "https://thunder.${CP_BASE_DOMAIN}"
+
+rca:
+  openchoreoApiUrl: "http://openchoreo-api.openchoreo-control-plane.svc.cluster.local:8080"
+  cors:
+    allowedOrigins:
+    - "https://console.${CP_BASE_DOMAIN}"
+  http:
+    hostnames:
+    - "rca-agent.${OBS_BASE_DOMAIN}"
+
+gateway:
+  tls:
+    enabled: true
+    hostname: "*.${OBS_BASE_DOMAIN}"
+    certificateRefs:
+    - name: obs-gateway-tls

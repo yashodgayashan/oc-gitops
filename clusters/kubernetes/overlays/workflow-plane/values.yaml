@@ -1,0 +1,3 @@
+# Workflow plane values for a non-k3d cluster: chart defaults. (On k3d this sets
+# a LoadBalancer for the Argo UI; here, expose it yourself if you need it.)
+{}

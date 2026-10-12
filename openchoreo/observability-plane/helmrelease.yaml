@@ -22,7 +22,7 @@ spec:
     crds: CreateReplace
     remediation:
       retries: 3
-  # Upstream install/k3d/single-cluster/values-op.yaml.
+  # Values come from the cluster overlay (clusters/<env>/overlays/observability-plane).
   valuesFrom:
     - kind: ConfigMap
       name: observability-plane-values

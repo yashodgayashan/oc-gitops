@@ -22,7 +22,7 @@ spec:
     crds: CreateReplace
     remediation:
       retries: 3
-  # values.yaml is the upstream install/k3d/single-cluster/values-dp.yaml.
+  # Values come from the cluster overlay (clusters/<env>/overlays/data-plane).
   valuesFrom:
     - kind: ConfigMap
       name: data-plane-values

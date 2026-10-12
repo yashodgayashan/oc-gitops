@@ -1,0 +1,29 @@
+# Generic variants from upstream samples/getting-started @ v1.3.1 (files unchanged).
+# publish-image.yaml pushes to ttl.sh (anonymous, images expire after 24h); replace
+# it with a template for your registry (ECR, GAR, ACR, Harbor, ...).
+# generate-workload.yaml defaults to k3d URLs; the patch below points it at the
+# in-cluster API and Thunder services, so it needs no domain or TLS settings.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../../openchoreo/workflow-templates
+  - publish-image.yaml
+  - generate-workload.yaml
+patches:
+  - target:
+      kind: ClusterWorkflowTemplate
+      name: generate-workload
+    patch: |-
+      # "test" ops fail the build if upstream reorders the parameters.
+      - op: test
+        path: /spec/templates/0/inputs/parameters/7/name
+        value: oauth-token-url
+      - op: replace
+        path: /spec/templates/0/inputs/parameters/7/default
+        value: http://thunder-service.thunder.svc.cluster.local:8090/oauth2/token
+      - op: test
+        path: /spec/templates/0/inputs/parameters/11/name
+        value: api-server-url
+      - op: replace
+        path: /spec/templates/0/inputs/parameters/11/default
+        value: http://openchoreo-api.openchoreo-control-plane.svc.cluster.local:8080

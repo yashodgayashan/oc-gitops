@@ -1,0 +1,35 @@
+# Self-signed CA for the gateway certificates, as in the upstream
+# "On Your Environment" guide. Every Certificate in this cluster's overlays uses
+# ClusterIssuer "openchoreo-ca", so switching to a trusted CA (e.g. an ACME/Let's
+# Encrypt ClusterIssuer with the same name) is a change in this file only. When
+# you do, also drop the skip-TLS-verify settings in overlays/control-plane/values.yaml.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-bootstrap
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openchoreo-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: openchoreo-ca
+  secretName: openchoreo-ca-secret
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned-bootstrap
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: openchoreo-ca
+spec:
+  ca:
+    secretName: openchoreo-ca-secret

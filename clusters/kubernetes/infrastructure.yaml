@@ -1,0 +1,185 @@
+# Prerequisites shared by every plane.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: namespaces
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 2m
+  path: ./infrastructure/namespaces
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: sources
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 2m
+  path: ./infrastructure/sources
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gateway-api-crds
+  namespace: flux-system
+spec:
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  path: ./infrastructure/gateway-api-crds
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: namespaces
+    - name: sources
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./infrastructure/cert-manager
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tls
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cert-manager
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  path: ./clusters/kubernetes/overlays/tls
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: trust-manager
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cert-manager
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./infrastructure/trust-manager
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: external-secrets
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: namespaces
+    - name: sources
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./infrastructure/external-secrets
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kgateway
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: namespaces
+    - name: sources
+    - name: gateway-api-crds
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./infrastructure/kgateway
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: openbao
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: external-secrets
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./infrastructure/openbao
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: thunder
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: namespaces
+    - name: sources
+    - name: gateway-api-crds
+  interval: 10m
+  retryInterval: 1m
+  timeout: 10m
+  path: ./clusters/kubernetes/overlays/thunder
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-settings

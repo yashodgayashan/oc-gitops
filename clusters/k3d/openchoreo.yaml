@@ -16,7 +16,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 20m
-  path: ./openchoreo/control-plane
+  path: ./clusters/k3d/overlays/control-plane
   prune: true
   wait: true
   sourceRef:
@@ -52,7 +52,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 15m
-  path: ./openchoreo/data-plane
+  path: ./clusters/k3d/overlays/data-plane
   prune: true
   wait: true
   sourceRef:
@@ -70,7 +70,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 15m
-  path: ./openchoreo/workflow-plane
+  path: ./clusters/k3d/overlays/workflow-plane
   prune: true
   wait: true
   sourceRef:
@@ -88,7 +88,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 5m
-  path: ./openchoreo/workflow-templates
+  path: ./clusters/k3d/overlays/workflow-templates
   prune: true
   wait: true
   sourceRef:
@@ -106,7 +106,7 @@ spec:
   interval: 10m
   retryInterval: 1m
   timeout: 30m
-  path: ./openchoreo/observability-plane
+  path: ./clusters/k3d/overlays/observability-plane
   prune: true
   wait: true
   sourceRef:

@@ -1,5 +1,5 @@
-# ThunderID identity provider. values.yaml is the upstream
-# install/k3d/common/values-thunder.yaml (bootstrap users, groups, OAuth clients).
+# ThunderID identity provider. Values (bootstrap users, groups, OAuth clients and
+# their redirect URLs) come from the cluster overlay (clusters/<env>/overlays/thunder).
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
