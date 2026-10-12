@@ -1,0 +1,8 @@
+# Entry point the root Flux Kustomization (bootstrap/flux-sync.yaml) points at.
+# Each module below is its own Flux Kustomization; dependsOn gives install order.
+# To drop a module, remove it (and anything that depends on it) from these files.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - infrastructure.yaml
+  - openchoreo.yaml

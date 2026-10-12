@@ -1,0 +1,43 @@
+# Helm values for OpenChoreo Control Plane in k3d single-cluster setup
+
+openchoreoApi:
+  http:
+    hostnames:
+    - api.openchoreo.localhost
+  config:
+    server:
+      publicUrl: "http://api.openchoreo.localhost:8080"
+    remoteConnect:
+      # `occ remote` tunnels. Router NodePort 30443 is mapped to the host in config.yaml.
+      enabled: true
+      entrypointAddress: "127.0.0.1:30443"
+      agentImage:
+        tag: latest-dev
+
+backstage:
+  secretName: backstage-secrets
+  baseUrl: "http://openchoreo.localhost:8080"
+  http:
+    hostnames:
+    - openchoreo.localhost
+
+portalAssistant:
+  config:
+    observerApiUrl: "http://observer.openchoreo.localhost:11080"
+
+security:
+  oidc:
+    issuer: "http://thunder.openchoreo.localhost:8080"
+    jwksUrl: "http://thunder.openchoreo.localhost:8080/oauth2/jwks"
+    authorizationUrl: "http://thunder.openchoreo.localhost:8080/oauth2/authorize"
+    tokenUrl: "http://thunder.openchoreo.localhost:8080/oauth2/token"
+
+gateway:
+  httpPort: 8080
+  httpsPort: 8443
+  tls:
+    enabled: false
+
+features:
+  secretManagement:
+    enabled: true

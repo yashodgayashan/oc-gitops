@@ -1,0 +1,132 @@
+# OpenChoreo planes, their registrations, and default platform resources.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: control-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: cert-manager
+    - name: trust-manager
+    - name: kgateway
+    - name: openbao
+    - name: thunder
+    - name: coredns
+  interval: 10m
+  retryInterval: 1m
+  timeout: 20m
+  path: ./openchoreo/control-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: default-resources
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  path: ./openchoreo/default-resources
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: data-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 15m
+  path: ./openchoreo/data-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: workflow-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 15m
+  path: ./openchoreo/workflow-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: workflow-templates
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: workflow-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  path: ./openchoreo/workflow-templates
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: observability-plane
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: control-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 30m
+  path: ./openchoreo/observability-plane
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: observability-modules
+  namespace: flux-system
+spec:
+  dependsOn:
+    - name: observability-plane
+  interval: 10m
+  retryInterval: 1m
+  timeout: 30m
+  path: ./openchoreo/observability-modules
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops

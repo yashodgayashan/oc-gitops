@@ -1,0 +1,26 @@
+# ThunderID identity provider. values.yaml is the upstream
+# install/k3d/common/values-thunder.yaml (bootstrap users, groups, OAuth clients).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: thunder
+  namespace: thunder
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: thunderid
+      version: 1.0.1
+      sourceRef:
+        kind: HelmRepository
+        name: thunder-id
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  valuesFrom:
+    - kind: ConfigMap
+      name: thunder-values

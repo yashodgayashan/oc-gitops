@@ -1,0 +1,146 @@
+# Observability modules pinned to the versions k3d-install.sh @ v1.3.1 installs.
+# Values are the final state the script converges to (it installs logs first and
+# enables fluent-bit in a second pass; Flux applies it in one go).
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: observability-logs-opensearch
+  namespace: openchoreo-observability-plane
+spec:
+  interval: 30m
+  timeout: 15m
+  chart:
+    spec:
+      chart: observability-logs-opensearch
+      version: 0.6.0
+      sourceRef:
+        kind: HelmRepository
+        name: openchoreo
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    openSearchSetup:
+      openSearchSecretName: opensearch-admin-credentials
+    adapter:
+      openSearchSecretName: opensearch-admin-credentials
+    auditLogs:
+      enabled: true
+    fluent-bit:
+      enabled: true
+    fluentBitCustomizations:
+      clusterInstance: oc-gitops
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: observability-traces-opensearch
+  namespace: openchoreo-observability-plane
+spec:
+  interval: 30m
+  timeout: 15m
+  dependsOn:
+    - name: observability-logs-opensearch
+  chart:
+    spec:
+      chart: observability-tracing-opensearch
+      version: 0.6.0
+      sourceRef:
+        kind: HelmRepository
+        name: openchoreo
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Reuses the OpenSearch cluster the logs module runs.
+    openSearch:
+      enabled: false
+    openSearchSetup:
+      openSearchSecretName: opensearch-admin-credentials
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: observability-metrics-prometheus
+  namespace: openchoreo-observability-plane
+spec:
+  interval: 30m
+  timeout: 15m
+  chart:
+    spec:
+      chart: observability-metrics-prometheus
+      version: 0.7.1
+      sourceRef:
+        kind: HelmRepository
+        name: openchoreo
+        namespace: flux-system
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: observability-events-otel-collector
+  namespace: openchoreo-observability-plane
+spec:
+  interval: 30m
+  dependsOn:
+    - name: observability-logs-opensearch
+  chart:
+    spec:
+      chart: observability-events-otel-collector
+      version: 0.1.2
+      sourceRef:
+        kind: HelmRepository
+        name: openchoreo
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    collector:
+      extraEnv:
+        - name: OPENSEARCH_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: opensearch-admin-credentials
+              key: username
+        - name: OPENSEARCH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: opensearch-admin-credentials
+              key: password
+    extraExtensions:
+      basicauth/opensearch:
+        client_auth:
+          username: ${env:OPENSEARCH_USERNAME}
+          password: ${env:OPENSEARCH_PASSWORD}
+    exporters:
+      opensearch:
+        logs_index: "k8s-events"
+        logs_index_time_format: "yyyy-MM-dd"
+        http:
+          endpoint: "https://opensearch:9200"
+          tls:
+            insecure_skip_verify: true
+          auth:
+            authenticator: basicauth/opensearch
+    pipelineExporters:
+      - opensearch

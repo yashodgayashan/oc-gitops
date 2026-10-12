@@ -1,0 +1,28 @@
+# Registers the data plane with the control plane. clientCA points at the agent's
+# cert Secret instead of inlining the PEM, so nothing has to be copied by hand.
+apiVersion: openchoreo.dev/v1alpha1
+kind: ClusterDataPlane
+metadata:
+  name: default
+spec:
+  planeID: default
+  clusterAgent:
+    clientCA:
+      secretKeyRef:
+        name: cluster-agent-tls
+        namespace: openchoreo-data-plane
+        key: ca.crt
+  secretStoreRef:
+    name: default
+  observabilityPlaneRef:
+    kind: ClusterObservabilityPlane
+    name: default
+  gateway:
+    ingress:
+      external:
+        http:
+          host: openchoreoapis.localhost
+          listenerName: http
+          port: 19080
+        name: gateway-default
+        namespace: openchoreo-data-plane

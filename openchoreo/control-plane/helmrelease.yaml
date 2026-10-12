@@ -1,0 +1,37 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: openchoreo-control-plane
+  namespace: openchoreo-control-plane
+spec:
+  interval: 30m
+  timeout: 15m
+  chart:
+    spec:
+      chart: openchoreo-control-plane
+      version: 1.3.1
+      sourceRef:
+        kind: HelmRepository
+        name: openchoreo
+        namespace: flux-system
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  # values.yaml is the upstream install/k3d/single-cluster/values-cp.yaml.
+  valuesFrom:
+    - kind: ConfigMap
+      name: control-plane-values
+  # Overrides on top of the upstream file (k3d-install.sh --with-observability).
+  values:
+    openchoreoApi:
+      config:
+        audit:
+          enabled: true
+          observabilityPlaneRef:
+            kind: ClusterObservabilityPlane
+            name: default

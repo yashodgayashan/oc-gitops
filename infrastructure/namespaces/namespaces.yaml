@@ -1,0 +1,48 @@
+# All namespaces are owned here so modules never race on --create-namespace,
+# and so the plane namespaces carry the label the cluster-gateway CA Bundle
+# (openchoreo/control-plane/cluster-gateway-ca-bundle.yaml) selects on.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openbao
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: thunder
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openchoreo-control-plane
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openchoreo-data-plane
+  labels:
+    oc-gitops/cluster-gateway-ca: "true"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openchoreo-workflow-plane
+  labels:
+    oc-gitops/cluster-gateway-ca: "true"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openchoreo-observability-plane
+  labels:
+    oc-gitops/cluster-gateway-ca: "true"

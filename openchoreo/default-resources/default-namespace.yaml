@@ -1,0 +1,10 @@
+# Marks "default" as an OpenChoreo namespace. Prune is disabled so removing this
+# module never tries to delete the built-in namespace.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+  labels:
+    openchoreo.dev/control-plane: "true"
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled

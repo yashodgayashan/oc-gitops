@@ -1,0 +1,17 @@
+apiVersion: openchoreo.dev/v1alpha1
+kind: ClusterWorkflowPlane
+metadata:
+  name: default
+spec:
+  planeID: default
+  clusterAgent:
+    clientCA:
+      secretKeyRef:
+        name: cluster-agent-tls
+        namespace: openchoreo-workflow-plane
+        key: ca.crt
+  secretStoreRef:
+    name: default
+  observabilityPlaneRef:
+    kind: ClusterObservabilityPlane
+    name: default

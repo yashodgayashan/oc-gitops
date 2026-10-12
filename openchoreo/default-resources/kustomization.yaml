@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - default-namespace.yaml
+  # Upstream samples/getting-started/all.yaml @ v1.3.1: project, environments,
+  # deployment pipeline, cluster component/resource/project types, traits, workflows.
+  - getting-started.yaml

@@ -1,0 +1,26 @@
+# Points Flux at this repo. bootstrap.sh substitutes ${GIT_URL} and ${GIT_BRANCH}.
+# For a private repo add `secretRef: {name: oc-gitops-auth}` and create that
+# secret with `flux create secret git oc-gitops-auth ...`.
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: oc-gitops
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: ${GIT_URL}
+  ref:
+    branch: ${GIT_BRANCH}
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: oc-gitops
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./clusters/k3d
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: oc-gitops
