@@ -24,7 +24,7 @@ backstage:
   # (backstage-plugins branch feat/scm-git-integrations). Local image,
   # imported with `k3d image import ... -c oc-gitops`; not on ghcr.
   image:
-    tag: scm-git-4
+    tag: scm-git-5
     pullPolicy: IfNotPresent
   extraEnv:
   - name: OPENCHOREO_FEATURES_GIT_INTEGRATIONS_ENABLED
